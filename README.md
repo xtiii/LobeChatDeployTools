@@ -15,8 +15,8 @@ npm -v # should print `10.9.0`
 # 输出版本号即安装成功
 ```
 ### 2.运行脚本
-* 1.在 LobeChat **根目录**下执行以下命令
+* 在 LobeChat **根目录**下执行以下命令
 
-* 2.根据脚本内的提示进行下一步操作  
+* 根据脚本内的提示进行下一步操作  
 ```shell
 wget -O LobeChatTools.sh https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatTools.sh && chmod +x LobeChatTools.sh && ./LobeChatTools.sh
