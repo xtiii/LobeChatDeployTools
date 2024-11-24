@@ -2,7 +2,7 @@
 基于 [lobehub/lobe-chat](https://github.com/lobehub/lobe-chat) 的本地，无 Docker 部署方式
 
 ## 使用方法：
-首先安装Node.js(依次执行以下命令)
+首先安装Node.js(依次执行以下命令)  
 ```shell
 # installs nvm (Node Version Manager)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
@@ -14,8 +14,7 @@ node -v # should print `v22.11.0`
 npm -v # should print `10.9.0`
 # 输出版本号即安装成功
 ```
-1.在LobeChat根目录下执行以下命令
-
-2.根据脚本内的提示进行下一步操作
+1.在LobeChat根目录下执行以下命令  
+2.根据脚本内的提示进行下一步操作  
 ```shell
 wget -O LobeChatTools.sh https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatTools.sh && chmod +x LobeChatTools.sh && ./LobeChatTools.sh
