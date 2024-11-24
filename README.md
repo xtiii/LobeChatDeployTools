@@ -12,8 +12,8 @@ nvm install 22
 node -v # should print `v22.11.0`
 # verifies the right npm version is in the environment
 npm -v # should print `10.9.0`
+# 输出版本号即安装成功
 ```
-
 1.在LobeChat根目录下执行以下命令
 
 2.根据脚本内的提示进行下一步操作
