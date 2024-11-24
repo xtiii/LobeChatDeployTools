@@ -73,53 +73,75 @@ update() {
 	build
 }
 
-# 数据库迁移
-migration() {
-	SCRIPT_URL="http://example.com/path/to/your/script.sh"
-	SCRIPT_NAME="MigrationTools.sh"
-	# 如果目标目录不存在，则创建
-	if [ ! -d $DEPLOYTOOLS_DIR ]; then
-		mkdir -p $DEPLOYTOOLS_DIR
+# 数据库操作
+goto_db() {
+	SCRIPT_URL="https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/DeployTools/$SCRIPT_NAME"
+	if [ ! -d ./$DEPLOYTOOLS_DIR ]; then
+		mkdir -p ./$DEPLOYTOOLS_DIR
 	fi
-	if [ ! -f $DEPLOYTOOLS_DIR/$SCRIPT_NAME ]; then
-		wget -q -O "$DEPLOYTOOLS_DIR/$SCRIPT_NAME" "$SCRIPT_URL"
-		chmod +x "$DEPLOYTOOLS_DIR/$SCRIPT_NAME"
+	if [ ! -f ./$DEPLOYTOOLS_DIR/$SCRIPT_NAME ]; then
+		wget -q -O "./$DEPLOYTOOLS_DIR/$SCRIPT_NAME" "$SCRIPT_URL"
+		chmod +x "./$DEPLOYTOOLS_DIR/$SCRIPT_NAME"
 	fi
-	$DEPLOYTOOLS_DIR/$SCRIPT_NAME || true
+	./$DEPLOYTOOLS_DIR/$SCRIPT_NAME || true
 }
 
-# 数据库备份
-backup() {
-	SCRIPT_URL="http://example.com/path/to/your/script.sh"
-	SCRIPT_NAME="BackupTools.sh"
-	if [ ! -d $DEPLOYTOOLS_DIR ]; then
-		mkdir -p $DEPLOYTOOLS_DIR
-	fi
-	if [ ! -f $DEPLOYTOOLS_DIR/$SCRIPT_NAME ]; then
-		wget -q -O "$DEPLOYTOOLS_DIR/$SCRIPT_NAME" "$SCRIPT_URL"
-		chmod +x "$DEPLOYTOOLS_DIR/$SCRIPT_NAME"
-	fi
-	$DEPLOYTOOLS_DIR/$SCRIPT_NAME || true
+# 更新脚本
+update_script() {
+	SCRIPT_URL="https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatTools.sh"
+	sudo ln -sf "$SCRIPT_DIR/$SCRIPT_NAME" /usr/local/bin/lbt
 }
 
-# 获取当前脚本所在目录
-SCRIPT_DIR=$(dirname "$0")
-# 将目录路径转换为绝对路径
-SCRIPT_DIR=$(cd "$SCRIPT_DIR" && pwd)
+# 删除脚本
+delete_script() {
+	# 读取用户输入
+	read -p "是否彻底删除此脚本(y/n): " choice
+	# 将输入转换为小写，以便不区分大小写
+	choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]')
+	case $choice in
+		"y")
+			clear
+			echo "期待与您再次相遇，再见~"
+			rm -rf /usr/local/bin/lbt
+			rm -rf ./$DEPLOYTOOLS_DIR
+			rm -rf ./$SCRIPT_NAME
+			exit 0
+			;;
+		*)
+			init
+			;;
+	esac
+}
 
-# 定义部署工具的存放目录
-DEPLOYTOOLS_DIR="./DeployTools"
 
-# 定义 src 文件夹路径
-SRC_DIR="./src"
-# 定义 package.json 文件路径
-PACKAGE_FILE="./package.json"
+# 获取脚本的完整原始路径
+SCRIPT_PATH=$(realpath "$0")
+# 获取脚本的原始目录
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+# 获取脚本的文件名
+SCRIPT_NAME=$(basename "$SCRIPT_PATH")
+
+# 检查符号链接是否存在
+if [ ! -L /usr/local/bin/lbt ]; then
+    # 如果符号链接不存在，创建它
+    sudo ln -s $SCRIPT_DIR/$SCRIPT_NAME /usr/local/bin/lbt
+else
+    echo "已创建链接"
+fi
+
+# 定义部署工具的存放目录名
+DEPLOYTOOLS_DIR="DeployTools"
+
+# 定义 src 文件夹名
+SRC_DIR="src"
+# 定义 package.json 文件名
+PACKAGE_FILE="package.json"
 
 # 初始化目标目录为当前目录
 TARGET_DIR=""
 
 # 检查当前目录
-if [ -d $SRC_DIR ] && [ -f $PACKAGE_FILE ]; then
+if [ -d ./$SRC_DIR ] && [ -f ./$PACKAGE_FILE ]; then
     TARGET_DIR="./"
 # 检查上级目录
 elif [ -d ../$SRC_DIR ] && [ -f ../$PACKAGE_FILE ]; then
@@ -143,6 +165,8 @@ init() {
 		echo -e " 4 -> 更新程序"
 		echo -e " 5 -> 数据库迁移"
 		echo -e " 6 -> 数据库备份"
+		echo -e " 7 -> 更新此脚本"
+		echo -e " 8 -> 删除此脚本"
 		echo -e " 0 -> 退出程序"
 
 		# 读取用户输入
@@ -168,12 +192,24 @@ init() {
 			5)
 				clear
 				echo "开始数据库迁移"
-				migration
+				SCRIPT_NAME="MigrationTools.sh"
+				goto_db
 				;;
 			6)
 				clear
 				echo "开始数据库备份"
-				backup
+				SCRIPT_NAME="BackupTools.sh"
+				goto_db
+				;;
+			7)
+				clear
+				echo "开始更新脚本"
+				update_script
+				;;
+			8)
+				clear
+				echo "开始删除脚本"
+				delete_script
 				;;
 			*)
 				exit 0
