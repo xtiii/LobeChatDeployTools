@@ -26,14 +26,14 @@ bun -v
 
 # 输出版本号即安装成功
 ```
-### 2. 克隆LobeChat仓库
+### 2. 克隆 LobeChat 仓库
 ```shell
-# 每3小时同步一次官方仓库
+# 以下仓库每3小时和官方同步一次(你也可以将下面链接换成官方仓库)
 git clone https://github.com/xtiii/LobeChat.git
 cd ./LobeChat
 ```
 ### 3. 运行脚本
-* 请在 LobeChat **根目录**下执行以下命令
+* 确保在 LobeChat **根目录**下执行以下命令
 
 * 然后请根据脚本内的提示进行下一步操作
 ```shell
