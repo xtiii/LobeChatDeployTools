@@ -94,7 +94,6 @@ update_script() {
 }
 
 
-
 # 删除脚本
 delete_script() {
 	# 读取用户输入
