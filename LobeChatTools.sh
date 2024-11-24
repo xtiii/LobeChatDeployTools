@@ -89,8 +89,11 @@ goto_db() {
 # 更新脚本
 update_script() {
 	SCRIPT_URL="https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatTools.sh"
+	wget -O $SCRIPT_NAME https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatTools.sh
 	sudo ln -sf "$SCRIPT_DIR/$SCRIPT_NAME" /usr/local/bin/lbt
 }
+
+
 
 # 删除脚本
 delete_script() {
@@ -112,7 +115,6 @@ delete_script() {
 			;;
 	esac
 }
-
 
 # 获取脚本的完整原始路径
 SCRIPT_PATH=$(realpath "$0")
@@ -204,6 +206,7 @@ init() {
 			7)
 				clear
 				echo "开始更新脚本"
+				SCRIPT_NAME=$(basename "$SCRIPT_PATH")
 				update_script
 				;;
 			8)
