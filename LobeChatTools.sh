@@ -68,14 +68,19 @@ run() {
 # 更新程序
 update() {
 	echo "开始更新程序，这可能需要一些时间！"
-	git pull origin main
-	install
-	build
+	OUTPUT=$(git pull)
+	if [[ $OUTPUT == *"up to date"* || $OUTPUT == *"最新"* ]]; then
+		echo "🎉 已经是最新版本！"
+	else
+		echo "检测到更新，开始更新并自动部署！"
+		install
+		build
+	fi
 }
 
 # 数据库操作
 goto_db() {
-	SCRIPT_URL="https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/DeployTools/$SCRIPT_NAME"
+	SCRIPT_URL="https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatDeployTools/$SCRIPT_NAME"
 	if [ ! -d ./$DEPLOYTOOLS_DIR ]; then
 		mkdir -p ./$DEPLOYTOOLS_DIR
 	fi
@@ -92,7 +97,6 @@ update_script() {
 	wget -O $SCRIPT_NAME https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatTools.sh
 	sudo ln -sf "$SCRIPT_DIR/$SCRIPT_NAME" /usr/local/bin/lbt
 }
-
 
 # 删除脚本
 delete_script() {
@@ -115,20 +119,26 @@ delete_script() {
 	esac
 }
 
-# 获取脚本的完整原始路径
-SCRIPT_PATH=$(realpath "$0")
-# 获取脚本的原始目录
-SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
-# 获取脚本的文件名
-SCRIPT_NAME=$(basename "$SCRIPT_PATH")
-
-# 检查符号链接是否存在
-if [ ! -L /usr/local/bin/lbt ]; then
-    # 如果符号链接不存在，创建它
-    sudo ln -s $SCRIPT_DIR/$SCRIPT_NAME /usr/local/bin/lbt
-else
-    echo "已创建链接"
-fi
+# 不在 LobeChat 根目录
+no_lobechat() {
+	echo "❌ 当前不在 LobeChat 的根目录"
+	# 读取用户输入
+	read -p "是否从 Git 克隆 LobeChat (y/n): " choice
+	# 将输入转换为小写，以便不区分大小写
+	choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]')
+	case $choice in
+		"y")
+			clear
+			echo "正在从 xtiii/LobeChat 克隆..."
+			git clone https://github.com/xtiii/LobeChat.git
+			cd ./LobeChat
+			;;
+		*)
+			echo "❌ 请确保当前目录或上级目录为 LobeChat 的根目录！"
+			exit 0
+			;;
+	esac
+}
 
 # 定义部署工具的存放目录名
 DEPLOYTOOLS_DIR="DeployTools"
@@ -148,12 +158,26 @@ if [ -d ./$SRC_DIR ] && [ -f ./$PACKAGE_FILE ]; then
 elif [ -d ../$SRC_DIR ] && [ -f ../$PACKAGE_FILE ]; then
     TARGET_DIR="../"
 else
-    echo "❌ 请确认当前目录或者上级目录为 LobeChat 的根目录"
-    exit 1
+    no_lobechat
 fi
 
 # 切换到目标目录
 cd "$TARGET_DIR"
+
+# 获取脚本的完整原始路径
+SCRIPT_PATH=$(realpath "$0")
+# 获取脚本的原始目录
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+# 获取脚本的文件名
+SCRIPT_NAME=$(basename "$SCRIPT_PATH")
+
+# 检查符号链接是否存在
+if [ ! -L /usr/local/bin/lbt ]; then
+    # 如果符号链接不存在，创建它
+    sudo ln -s $SCRIPT_PATH /usr/local/bin/lbt
+else
+    echo "已创建链接"
+fi
 
 # 入口
 init() {
@@ -169,6 +193,7 @@ init() {
 		echo -e " 7 -> 更新此脚本"
 		echo -e " 8 -> 删除此脚本"
 		echo -e " 0 -> 退出程序"
+		echo -e "Ps: 在任意地方输入 \033[32mlbt\033[0m 命令即可运行此脚本~~~"
 
 		# 读取用户输入
 		read -p "请输入待执行的编号: " choice
