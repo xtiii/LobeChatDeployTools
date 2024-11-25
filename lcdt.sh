@@ -36,7 +36,7 @@ SRC_DIR="src"
 # 定义 package.json 文件名
 PACKAGE_FILE="package.json"
 # 定义部署工具的存放目录名
-DEPLOYTOOLS_DIR="DBTools"
+DEPLOYTOOLS_DIR="LobeChatDeployTools"
 
 # 获取脚本所在的完整原始路径
 SCRIPT_PATH=$(realpath "$0")
@@ -44,6 +44,9 @@ SCRIPT_PATH=$(realpath "$0")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 # 获取脚本的文件名
 SCRIPT_NAME=$(basename "$SCRIPT_PATH")
+
+# 定义仓库地址
+STOREHOSE_URL="https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main"
 
 
 # 安装依赖
@@ -98,22 +101,22 @@ update() {
 
 # 数据库操作
 goto_db() {
-	SCRIPT_URL="https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatDeployTools/$SCRIPT_NAME"
+	SCRIPT_URL="$STOREHOSE_URL/$DEPLOYTOOLS_DIR/$DB_SCRIPT_NAME"
 	if [ ! -d ./$DEPLOYTOOLS_DIR ]; then
 		mkdir -p ./$DEPLOYTOOLS_DIR
 	fi
-	if [ ! -f ./$DEPLOYTOOLS_DIR/$SCRIPT_NAME ]; then
-		wget -q -O "./$DEPLOYTOOLS_DIR/$SCRIPT_NAME" "$SCRIPT_URL"
-		chmod +x "./$DEPLOYTOOLS_DIR/$SCRIPT_NAME"
+	if [ ! -f ./$DEPLOYTOOLS_DIR/$DB_SCRIPT_NAME ]; then
+		wget -q -O "./$DEPLOYTOOLS_DIR/$DB_SCRIPT_NAME" "$SCRIPT_URL"
+		chmod +x "./$DEPLOYTOOLS_DIR/$DB_SCRIPT_NAME"
 	fi
-	./$DEPLOYTOOLS_DIR/$SCRIPT_NAME || true
+	./$DEPLOYTOOLS_DIR/$DB_SCRIPT_NAME || true
 }
 
 # 更新脚本
 update_script() {
-	SCRIPT_URL="https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatTools.sh"
-	wget -O $SCRIPT_NAME https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatTools.sh
-	sudo ln -sf "$SCRIPT_DIR/$SCRIPT_NAME" /usr/local/bin/lbt
+	SCRIPT_URL="$STOREHOSE_URL/LobeChatDeployTools.sh"
+	wget -O "$SCRIPT_NAME" "$SCRIPT_URL"
+	sudo ln -sf "$SCRIPT_DIR/$SCRIPT_NAME" /usr/local/bin/lcdt
 }
 
 # 删除脚本
@@ -125,10 +128,10 @@ delete_script() {
 	case $choice in
 		"y")
 			clear
-			echo "期待与您再次相遇，再见~"
-			rm -rf /usr/local/bin/lbt
+			rm -rf /usr/local/bin/lcdt
 			rm -rf ./$DEPLOYTOOLS_DIR
 			rm -rf ./$SCRIPT_NAME
+			echo "期待与您再次相遇，再见~"
 			exit 0
 			;;
 		*)
@@ -148,6 +151,7 @@ no_lobechat() {
 		"y")
 			clear
 			echo "正在从 xtiii/LobeChat 克隆..."
+			echo "该仓库每三小时与官方仓库同步一次，请放心使用。"
 			git clone https://github.com/xtiii/LobeChat.git || true
 			mv -u ./$SCRIPT_NAME ./LobeChat/$SCRIPT_NAME
 			cd ./LobeChat && ./$SCRIPT_NAME
@@ -163,26 +167,13 @@ no_lobechat() {
 
 # 检查符号链接是否存在
 link() {
-    if [ ! -L /usr/local/bin/lbt ]; then
+    if [ ! -L /usr/local/bin/lcdt ]; then
         # 如果符号链接不存在，创建它
-        sudo ln -s $SCRIPT_PATH /usr/local/bin/lbt
+        sudo ln -s $SCRIPT_PATH /usr/local/bin/lcdt
     else
         echo "✔ 已创建链接"
     fi
 }
-
-# 检查当前目录
-if [ -d ./$SRC_DIR ] && [ -f ./$PACKAGE_FILE ]; then
-    TARGET_DIR="./"
-# 检查上级目录
-elif [ -d ../$SRC_DIR ] && [ -f ../$PACKAGE_FILE ]; then
-    TARGET_DIR="../"
-else
-    no_lobechat
-fi
-
-# 切换到目标目录
-cd "$TARGET_DIR"
 
 # 入口
 init() {
@@ -202,7 +193,7 @@ init() {
 		echo -e " 7 -> 更新此脚本"
 		echo -e " 8 -> 删除此脚本"
 		echo -e " 0 -> 退出程序"
-		echo -e "Ps: 在任意地方输入 \033[32mlbt\033[0m 命令即可运行此脚本~~~"
+		echo -e "Ps: 在任意地方输入 \033[32mlcdt\033[0m 命令即可运行此脚本~"
 
 		# 读取用户输入
 		read -p "请输入待执行的编号: " choice
@@ -227,19 +218,18 @@ init() {
 			5)
 				clear
 				echo "开始数据库迁移"
-				SCRIPT_NAME="MigrationTools.sh"
+				DB_SCRIPT_NAME="MigrationTools.sh"
 				goto_db
 				;;
 			6)
 				clear
 				echo "开始数据库备份"
-				SCRIPT_NAME="BackupTools.sh"
+				DB_SCRIPT_NAME="BackupTools.sh"
 				goto_db
 				;;
 			7)
 				clear
 				echo "开始更新脚本"
-				SCRIPT_NAME=$(basename "$SCRIPT_PATH")
 				update_script
 				;;
 			8)
@@ -256,9 +246,22 @@ init() {
 
 
 
+# 检查当前目录
+if [ -d ./$SRC_DIR ] && [ -f ./$PACKAGE_FILE ]; then
+    TARGET_DIR="./"
+# 检查上级目录
+elif [ -d ../$SRC_DIR ] && [ -f ../$PACKAGE_FILE ]; then
+    TARGET_DIR="../"
+else
+    no_lobechat
+fi
+
+# 切换到目标目录
+cd "$TARGET_DIR"
+
 # 开始
 clear
-echo -e "\033[47;34m建议的服务器内存大小：8G\033[0m"
+echo -e "\033[47;34m建议的内存大小：8G\033[0m"
 echo -e "当前环境：\033[32mnode:$NODE_VERSION\033[0m  \033[34mnpm:v$NPM_VERSION\033[0m  \033[36mbun:v$BUN_VERSION\033[0m"
 init
 
