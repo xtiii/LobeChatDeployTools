@@ -158,7 +158,7 @@ no_lobechat() {
 				git clone https://github.com/xtiii/LobeChat.git || true
 			fi
 			mv -f $SCRIPT_PATH /www/wwwroot/LobeChat/$SCRIPT_NAME
-			cd ./LobeChat && ./$SCRIPT_NAME
+			cd /www/wwwroot/LobeChat && ./$SCRIPT_NAME
 			exit 0
 			;;
 		*)
