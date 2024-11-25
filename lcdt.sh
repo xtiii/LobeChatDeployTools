@@ -29,15 +29,6 @@ else
 fi
 
 
-# 初始化目标目录为当前目录
-TARGET_DIR=""
-# 定义 src 文件夹名
-SRC_DIR="src"
-# 定义 package.json 文件名
-PACKAGE_FILE="package.json"
-# 定义部署工具的存放目录名
-DEPLOYTOOLS_DIR="LobeChatDeployTools"
-
 # 获取脚本所在的完整原始路径
 SCRIPT_PATH=$(realpath "$0")
 # 获取脚本所在的原始目录
@@ -47,6 +38,15 @@ SCRIPT_NAME=$(basename "$SCRIPT_PATH")
 
 # 定义仓库地址
 STOREHOSE_URL="https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main"
+
+# 初始化目标目录为当前目录
+TARGET_DIR=""
+# 定义 src 文件夹名
+SRC_DIR="$SCRIPT_DIR/src"
+# 定义 package.json 文件名
+PACKAGE_FILE="$SCRIPT_DIR/package.json"
+# 定义部署工具的存放目录名
+DEPLOYTOOLS_DIR="LobeChatDeployTools"
 
 
 # 安装依赖
@@ -163,7 +163,7 @@ no_lobechat() {
 			;;
 		*)
 			clear
-			echo "❌ 请确保当前目录或上级目录为 LobeChat 的根目录！"
+			echo "❌ 请确保当前目录为 LobeChat 的根目录！"
 			exit 0
 			;;
 	esac
@@ -251,17 +251,10 @@ init() {
 
 
 # 检查当前目录
-if [ -d ./$SRC_DIR ] && [ -f ./$PACKAGE_FILE ]; then
-    TARGET_DIR="./"
-# 检查上级目录
-elif [ -d ../$SRC_DIR ] && [ -f ../$PACKAGE_FILE ]; then
-    TARGET_DIR="../"
-else
+if [ ! -d $SRC_DIR ] || [ ! -f $PACKAGE_FILE ]; then
+	ls
     no_lobechat
 fi
-
-# 切换到目标目录
-cd "$TARGET_DIR"
 
 # 开始
 clear
