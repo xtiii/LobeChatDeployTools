@@ -28,6 +28,24 @@ else
 	exit 1
 fi
 
+
+# 初始化目标目录为当前目录
+TARGET_DIR=""
+# 定义 src 文件夹名
+SRC_DIR="src"
+# 定义 package.json 文件名
+PACKAGE_FILE="package.json"
+# 定义部署工具的存放目录名
+DEPLOYTOOLS_DIR="DBTools"
+
+# 获取脚本所在的完整原始路径
+SCRIPT_PATH=$(realpath "$0")
+# 获取脚本所在的原始目录
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+# 获取脚本的文件名
+SCRIPT_NAME=$(basename "$SCRIPT_PATH")
+
+
 # 安装依赖
 install() {
 	echo "开始安装依赖"
@@ -130,26 +148,28 @@ no_lobechat() {
 		"y")
 			clear
 			echo "正在从 xtiii/LobeChat 克隆..."
-			git clone https://github.com/xtiii/LobeChat.git
-			cd ./LobeChat
+			git clone https://github.com/xtiii/LobeChat.git || true
+			mv -u ./$SCRIPT_NAME ./LobeChat/$SCRIPT_NAME
+			cd ./LobeChat && ./$SCRIPT_NAME
+			exit 0
 			;;
 		*)
+			clear
 			echo "❌ 请确保当前目录或上级目录为 LobeChat 的根目录！"
 			exit 0
 			;;
 	esac
 }
 
-# 定义部署工具的存放目录名
-DEPLOYTOOLS_DIR="DeployTools"
-
-# 定义 src 文件夹名
-SRC_DIR="src"
-# 定义 package.json 文件名
-PACKAGE_FILE="package.json"
-
-# 初始化目标目录为当前目录
-TARGET_DIR=""
+# 检查符号链接是否存在
+link() {
+    if [ ! -L /usr/local/bin/lbt ]; then
+        # 如果符号链接不存在，创建它
+        sudo ln -s $SCRIPT_PATH /usr/local/bin/lbt
+    else
+        echo "✔ 已创建链接"
+    fi
+}
 
 # 检查当前目录
 if [ -d ./$SRC_DIR ] && [ -f ./$PACKAGE_FILE ]; then
@@ -164,25 +184,14 @@ fi
 # 切换到目标目录
 cd "$TARGET_DIR"
 
-# 获取脚本的完整原始路径
-SCRIPT_PATH=$(realpath "$0")
-# 获取脚本的原始目录
-SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
-# 获取脚本的文件名
-SCRIPT_NAME=$(basename "$SCRIPT_PATH")
-
-# 检查符号链接是否存在
-if [ ! -L /usr/local/bin/lbt ]; then
-    # 如果符号链接不存在，创建它
-    sudo ln -s $SCRIPT_PATH /usr/local/bin/lbt
-else
-    echo "已创建链接"
-fi
-
 # 入口
 init() {
+    link
 	while true; do
-		echo -e "当前脚本执行目录：$SCRIPT_DIR"
+        # 获取当前工作目录
+        CURRENT_DIR=$(pwd)
+		echo -e " LobeChat 所在目录：$CURRENT_DIR"
+		echo -e " LobeChatDeployTools 所在目录：$SCRIPT_PATH"
 		echo -e "如果你是第一次构建 \033[32mLobeChat\033[0m 请先 安装依赖 再 构建程序"
 		echo -e " 1 -> 安装依赖"
 		echo -e " 2 -> 构建程序"

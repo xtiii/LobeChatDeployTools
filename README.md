@@ -37,4 +37,4 @@ cd ./LobeChat
 
 * 然后请根据脚本内的提示进行下一步操作
 ```shell
-wget -O LobeChatTools.sh https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatTools.sh && chmod +x LobeChatTools.sh && ./LobeChatTools.sh
+wget -O LobeChatDeployTools.sh https://raw.githubusercontent.com/xtiii/LobeChatDeployTools/main/LobeChatDeployTools.sh && chmod +x LobeChatDeployTools.sh && ./LobeChatDeployTools.sh
