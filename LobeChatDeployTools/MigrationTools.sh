@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e  # 如果任何命令返回非零值，则退出脚本
+set -e # 如果任何命令返回非零值，则退出脚本
 
 # 定义 .env 文件路径
 ENV_FILE="../.env"
@@ -21,11 +21,11 @@ if [[ -z "$DATABASE_URL" ]]; then
 fi
 
 # 使用参数扩展和sed/awk提取组件
-DB_USER=$(echo $DATABASE_URL | sed -r 's~.*://([^:]+):.*~\1~')
-DB_PASSWORD=$(echo $DATABASE_URL | sed -r 's~.*://[^:]+:([^@]+)@.*~\1~')
-DB_HOST=$(echo $DATABASE_URL | sed -r 's~.*@([^:]+):.*~\1~')
-DB_PORT=$(echo $DATABASE_URL | sed -r 's~.*:([0-9]+)/.*~\1~')
-DB_NAME=$(echo $DATABASE_URL | sed -r 's~.*/([^/]+)$~\1~')
+DB_USER=$(echo "$DATABASE_URL" | sed -r 's~.*://([^:]+):.*~\1~')
+DB_PASSWORD=$(echo "$DATABASE_URL" | sed -r 's~.*://[^:]+:([^@]+)@.*~\1~')
+DB_HOST=$(echo "$DATABASE_URL" | sed -r 's~.*@([^:]+):.*~\1~')
+DB_PORT=$(echo "$DATABASE_URL" | sed -r 's~.*:([0-9]+)/.*~\1~')
+DB_NAME=$(echo "$DATABASE_URL" | sed -r 's~.*/([^/]+)$~\1~')
 
 # 确保所有组件已成功提取
 if [[ -z "$DB_USER" || -z "$DB_PASSWORD" || -z "$DB_HOST" || -z "$DB_PORT" || -z "$DB_NAME" ]]; then

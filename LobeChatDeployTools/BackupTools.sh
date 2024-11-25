@@ -1,18 +1,18 @@
 #!/bin/bash
 
-set -e  # 如果任何命令返回非零值，则退出脚本
+set -e # 如果任何命令返回非零值，则退出脚本
 
 # PSQL_PATH=$(which psql)
 # echo $PSQL_PATH
 
 # 检查 PostgreSQL 是否安装
 if command -v psql >/dev/null 2>&1; then
-    # 检查 PostgreSQL 的版本
-    PG_VERSION=$(psql --version)
-    echo "PostgreSQL version: $PG_VERSION"
+  # 检查 PostgreSQL 的版本
+  PG_VERSION=$(psql --version)
+  echo "PostgreSQL version: $PG_VERSION"
 else
-    echo "❌ PostgreSQL is not installed."
-    exit 1
+  echo "❌ PostgreSQL is not installed."
+  exit 1
 fi
 
 # 定义 .env 文件路径
@@ -34,11 +34,11 @@ if [[ -z "$DATABASE_URL" ]]; then
 fi
 
 # 使用参数扩展和sed/awk提取组件
-DB_USER=$(echo $DATABASE_URL | sed -r 's~.*://([^:]+):.*~\1~')
-DB_PASSWORD=$(echo $DATABASE_URL | sed -r 's~.*://[^:]+:([^@]+)@.*~\1~')
-DB_HOST=$(echo $DATABASE_URL | sed -r 's~.*@([^:]+):.*~\1~')
-DB_PORT=$(echo $DATABASE_URL | sed -r 's~.*:([0-9]+)/.*~\1~')
-DB_NAME=$(echo $DATABASE_URL | sed -r 's~.*/([^/]+)$~\1~')
+DB_USER=$(echo "$DATABASE_URL" | sed -r 's~.*://([^:]+):.*~\1~')
+DB_PASSWORD=$(echo "$DATABASE_URL" | sed -r 's~.*://[^:]+:([^@]+)@.*~\1~')
+DB_HOST=$(echo "$DATABASE_URL" | sed -r 's~.*@([^:]+):.*~\1~')
+DB_PORT=$(echo "$DATABASE_URL" | sed -r 's~.*:([0-9]+)/.*~\1~')
+DB_NAME=$(echo "$DATABASE_URL" | sed -r 's~.*/([^/]+)$~\1~')
 
 # 确保所有组件已成功提取
 if [[ -z "$DB_USER" || -z "$DB_PASSWORD" || -z "$DB_HOST" || -z "$DB_PORT" || -z "$DB_NAME" ]]; then
@@ -57,7 +57,7 @@ export PGPASSWORD=${DB_PASSWORD}
 mkdir -p ${BACKUP_DIR}
 
 # Perform backup using pg_dump
-pg_dump -U ${DB_USER} -h ${DB_HOST} -p ${DB_PORT} -F p -b -v -f ${BACKUP_FILE} ${DB_NAME}
+pg_dump -U "${DB_USER}" -h "${DB_HOST}" -p "${DB_PORT}" -F p -b -v -f "${BACKUP_FILE}" "${DB_NAME}"
 
 # Check if the command succeeded
 if [ $? -eq 0 ]; then
@@ -70,5 +70,3 @@ fi
 unset PGPASSWORD
 
 # sudo -E -u postgres $PSQL_PATH -c "\q"
-
-

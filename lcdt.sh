@@ -91,7 +91,7 @@ run() {
 # 更新程序
 update() {
   echo "开始更新程序，这可能需要一些时间！"
-  OUTPUT=$(git pull)
+  OUTPUT=$(git pull origin main)
   if [[ $OUTPUT == *"up to date"* || $OUTPUT == *"最新"* ]]; then
     echo "🎉 已经是最新版本！"
   else
