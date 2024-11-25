@@ -152,8 +152,12 @@ no_lobechat() {
 			clear
 			echo "正在从 xtiii/LobeChat 克隆..."
 			echo "该仓库每三小时与官方仓库同步一次，请放心使用。"
-			git clone https://github.com/xtiii/LobeChat.git || true
-			mv -u ./$SCRIPT_NAME ./LobeChat/$SCRIPT_NAME
+			if [ ! -d /www/wwwroot ]; then
+				mkdir -p /www/wwwroot
+				cd /www/wwwroot
+				git clone https://github.com/xtiii/LobeChat.git || true
+			fi
+			mv -f $SCRIPT_PATH /www/wwwroot/LobeChat/$SCRIPT_NAME
 			cd ./LobeChat && ./$SCRIPT_NAME
 			exit 0
 			;;
