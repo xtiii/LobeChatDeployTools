@@ -150,15 +150,23 @@ no_lobechat() {
 	case $choice in
 		"y")
 			clear
-			echo "正在从 xtiii/LobeChat 克隆..."
-			echo "该仓库每三小时与官方仓库同步一次，请放心使用。"
-			if [ ! -d /www/wwwroot ]; then
-				mkdir -p /www/wwwroot
-				cd /www/wwwroot
+			# 读取用户输入
+			read -p "您要将 LobeChat 克隆到哪个目录，默认：/www/wwwroot" CLONE_PATH
+			# 如果没有输入，使用默认路径
+			if [ -z $CLONE_PATH ]; then
+				CLONE_PATH="/www/wwwroot"
+			fi
+			# 输出确认
+			echo -e "您选择的路径是：$CLONE_PATH"
+			echo -e "正在从 xtiii/LobeChat 克隆..."
+			echo -e "该仓库每三小时与官方仓库同步一次，请放心使用。"
+			if [ ! -d $CLONE_PATH ]; then
+				mkdir -p $CLONE_PATH
+				cd $CLONE_PATH
 				git clone https://github.com/xtiii/LobeChat.git || true
 			fi
 			mv -f $SCRIPT_PATH /www/wwwroot/LobeChat/$SCRIPT_NAME
-			cd /www/wwwroot/LobeChat && ./$SCRIPT_NAME
+			cd $CLONE_PATH/LobeChat && ./$SCRIPT_NAME
 			exit 0
 			;;
 		*)
@@ -174,8 +182,6 @@ link() {
     if [ ! -L /usr/local/bin/lcdt ]; then
         # 如果符号链接不存在，创建它
         sudo ln -s $SCRIPT_PATH /usr/local/bin/lcdt
-    else
-        echo "✔ 已创建链接"
     fi
 }
 
@@ -252,7 +258,6 @@ init() {
 
 # 检查当前目录
 if [ ! -d $SRC_DIR ] || [ ! -f $PACKAGE_FILE ]; then
-	ls
     no_lobechat
 fi
 
