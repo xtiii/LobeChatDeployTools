@@ -34,6 +34,9 @@ else
   exit 1
 fi
 
+# 选择默认源
+LOCATION="Default"
+
 # 检查 git
 if ! [ "$(command -v git)" ]; then
   echo "❌ git 未安装！正在为您安装..."
@@ -88,15 +91,23 @@ url_select() {
   # 比较两个URL的平均延迟
   if (($(echo "$GITEE_LATENCY < $GITHUB_LATENCY" | bc -l))); then
     LOCATION="Gitee"
+    sed -i 's/^LOCATION="Default"$/LOCATION="Gitee"/' $SCRIPT_NAME
     STOREHOSE_URL=$CN_STOREHOSE_URL
   else
     LOCATION="GitHub"
+    sed -i 's/^LOCATION="Default"$/LOCATION="GitHub"/' $SCRIPT_NAME
     STOREHOSE_URL=$EN_STOREHOSE_URL
   fi
 }
 
 # 自动选择国内外源
-url_select
+if [[ $LOCATION == "Gitee" ]]; then
+  STOREHOSE_URL=$CN_STOREHOSE_URL
+elif [[ $LOCATION == "GitHub" ]]; then
+  STOREHOSE_URL=$EN_STOREHOSE_URL
+else
+  url_select
+fi
 
 # 安装依赖
 install() {
@@ -151,11 +162,11 @@ update() {
 goto_db() {
   SCRIPT_URL="$STOREHOSE_URL/$DEPLOYTOOLS_DIR/$DB_SCRIPT_NAME"
   # 判断数据库操作工具目录是否存在
-  if [ ! -d ./$DEPLOYTOOLS_DIR ]; then
+  if ! [ -d ./$DEPLOYTOOLS_DIR ]; then
     mkdir -p ./$DEPLOYTOOLS_DIR
   fi
   # 判断数据库操作工具是否存在
-  if [ ! -f ./$DEPLOYTOOLS_DIR/$DB_SCRIPT_NAME ]; then
+  if ! [ -f ./$DEPLOYTOOLS_DIR/$DB_SCRIPT_NAME ]; then
     wget -O "./$DEPLOYTOOLS_DIR/$DB_SCRIPT_NAME" "$SCRIPT_URL"
     chmod +x "./$DEPLOYTOOLS_DIR/$DB_SCRIPT_NAME"
   fi
@@ -219,7 +230,7 @@ no_lobechat() {
     echo -e "您的设置路径是：$CLONE_PATH"
     echo -e "正在从 xtiii/LobeChat 克隆..."
     echo -e "该仓库每三小时与官方仓库同步一次，请放心使用。"
-    if [ ! -d "$CLONE_PATH" ]; then
+    if ! [ -d "$CLONE_PATH" ]; then
       mkdir -p "$CLONE_PATH"
       cd "$CLONE_PATH"
       git clone https://github.com/xtiii/LobeChat.git || true
@@ -251,7 +262,7 @@ init() {
     cd "$SCRIPT_DIR"
     # 获取当前工作目录
     CURRENT_DIR=$(pwd)
-    echo -e "当前用的是：$LOCATION"
+    echo -e "已为您选择：$LOCATION"
     echo -e " LobeChat 所在目录：$CURRENT_DIR"
     echo -e " LobeChatDeployTools 所在目录：$SCRIPT_PATH"
     echo -e "如果你是第一次构建 \033[32mLobeChat\033[0m 请先 安装依赖 再 构建程序"
@@ -289,6 +300,8 @@ init() {
     4)
       clear
       echo "开始更新程序，这可能需要一些时间！"
+      DB_SCRIPT_NAME="PostgreSQL_Tools.sh"
+      goto_db
       update
       ;;
     5)
