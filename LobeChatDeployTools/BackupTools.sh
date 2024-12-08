@@ -6,7 +6,7 @@ set -e # 如果任何命令返回非零值，则退出脚本
 # echo $PSQL_PATH
 
 # 检查 PostgreSQL 是否安装
-if command -v psql >/dev/null 2>&1; then
+if [ -f /www/service/pgsql/bin/psql ]; then
   # 检查 PostgreSQL 的版本
   PG_VERSION=$(psql --version)
   echo "PostgreSQL version: $PG_VERSION"
@@ -47,14 +47,15 @@ if [[ -z "$DB_USER" || -z "$DB_PASSWORD" || -z "$DB_HOST" || -z "$DB_PORT" || -z
 fi
 
 # Backup directory
-BACKUP_DIR="/www"
+BACKUP_DIR="/www/backup"
 BACKUP_FILE="${BACKUP_DIR}/${DB_NAME}_$(date +%Y%m%d_%H%M%S).sql"
+
+if [ ! -d ${BACKUP_DIP} ]; then
+  mkdir -p ${BACKUP_DIR}
+fi
 
 # Export PGPASSWORD to avoid prompting
 export PGPASSWORD=${DB_PASSWORD}
-
-# Create backup directory if it doesn't exist
-mkdir -p ${BACKUP_DIR}
 
 # Perform backup using pg_dump
 pg_dump -U "${DB_USER}" -h "${DB_HOST}" -p "${DB_PORT}" -F p -b -v -f "${BACKUP_FILE}" "${DB_NAME}"

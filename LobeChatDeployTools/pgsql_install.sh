@@ -12,6 +12,13 @@ PGSQL_VERSION=$3
 USERNAME="postgres"
 PASSWORD="pg123456"
 
+# 获取脚本所在的完整原始路径
+SCRIPT_PATH=$(realpath "$0")
+# 获取脚本所在的原始目录
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+# 获取脚本的文件名
+# SCRIPT_NAME=$(basename "$SCRIPT_PATH")
+
 getCpuStat() {
   time1=$(cat /proc/stat | grep 'cpu ')
   sleep 1
@@ -111,7 +118,13 @@ echo "安装用得到的库文件及依赖"
 sudo apt update
 sudo apt install -y gcc make pkg-config libicu-dev zlib1g-dev
 echo "开始执行configure配置"
-# 判断${INSTALL_DIR}是否存在
+if [ -f /etc/systemd/system/postgresql.service ]; then
+  systemctl stop postgresql || true
+  rm -rf /etc/systemd/system/postgresql.service
+fi
+if [ -f ${INSTALL_DIR}/data/postmaster.pid ]; then
+  kill -INT $(head -1 ${INSTALL_DIR}/data/postmaster.pid) || true
+fi
 if [ -d ${INSTALL_DIR} ]; then
   rm -rf ${INSTALL_DIR}
 fi
@@ -179,23 +192,40 @@ else
   echo "数据库初始化失败！"
 fi
 
+# PostgreSQL控制脚本链接
+if [ ! -L /usr/local/bin/pgsql ]; then
+  # 如果符号链接不存在，创建它
+  sudo ln -s ${SCRIPT_DIR}/pgsql.sh /usr/local/bin/pgsql
+  chmod +x ${SCRIPT_DIR}/pgsql.sh
+  chmod +x /usr/local/bin/pgsql
+  chown postgres:postgres ${SCRIPT_DIR}/pgsql.sh
+fi
+
+# 配置PostgreSQL开机自启
+if [ ! -f /etc/init.d/pgsql ]; then
+  \cp -a -r ${SCRIPT_DIR}/pgsql.sh /etc/init.d/pgsql
+  chmod +x /etc/init.d/pgsql
+  update-rc.d pgsql defaults
+fi
+
 # 启动 PostgreSQL
 echo "启动PostgreSQL..."
-su - ${USERNAME} -c 'pg_ctl -D $PGDATA -l $PGHOME/logs/pgsql.log start'
+pgsql start
 if [ $? -eq 0 ]; then
-  echo "PostgreSQL正在运行..."
+  echo "PostgreSQL已启动..."
 else
   echo "PostgreSQL启动失败！！！"
 fi
 
 echo "正在安装 pgvector..."
 cd /tmp
+rm -rf pgvector
 git clone --branch v0.8.0 https://github.com/pgvector/pgvector.git
 if [ $? -eq 0 ]; then
   chown -R ${USERNAME}:${USERNAME} pgvector
   cd pgvector
   echo "正在编译 pgvector..."
-  su - ${USERNAME} -c "cd /tmp/pgvector && make && make install"
+  su - ${USERNAME} -c "cd /tmp/pgvector && make && make install && clear"
   if [ $? -eq 0 ]; then
     echo "启用 pgvector..."
     su - ${USERNAME} -c "psql -c 'CREATE EXTENSION vector;'"
@@ -240,16 +270,7 @@ else
   echo "文件 ${INSTALL_DIR}/data/postgresql.conf 不存在！"
 fi
 
-su - ${USERNAME} -c "${INSTALL_DIR}/bin/postgres -D ${INSTALL_DIR}/data >>${INSTALL_DIR}/logs/pgsql.log 2>&1 &"
-
-# 重启 PostgreSQL
-echo "重启PostgreSQL..."
-su - ${USERNAME} -c 'pg_ctl -D $PGDATA -l $PGHOME/logs/pgsql.log restart'
-if [ $? -eq 0 ]; then
-  echo "PostgreSQL正在运行..."
-else
-  echo "PostgreSQL重启失败！！！"
-fi
+pgsql restart
 
 echo "---------------------------------------------------------------------------------------"
 echo "----------------------------SUCCESS INSTALLATION OF POSTGRESQL-------------------------"
